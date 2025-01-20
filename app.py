@@ -56,27 +56,31 @@ items = get_items()
 
 for item in items:
     col1, col2, col3 = st.columns([3, 1, 1])
+    
     with col1:
         new_name = st.text_input(f"Update item #{item['id']}", item['name'], key=f"update_{item['id']}")
+    
     with col2:
         if st.button("Update", key=f"update_btn_{item['id']}"):
             if new_name.strip():
                 update_item(item['id'], new_name)
-                st.experimental_rerun()
+                st.success(f"Updated item #{item['id']}")
             else:
                 st.error("Item name cannot be empty.")
+    
     with col3:
         if st.button("Delete", key=f"delete_btn_{item['id']}"):
             delete_item(item['id'])
-            st.experimental_rerun()
+            st.success(f"Deleted item #{item['id']}")
 
+# Add new item section
 st.header("Add New Item")
 new_item = st.text_input("Item Name", "")
+
 if st.button("Add Item"):
     if new_item.strip():
         add_item(new_item)
         st.success(f"Added item: {new_item}")
-        st.experimental_rerun()
     else:
         st.error("Item name cannot be empty.")
 
