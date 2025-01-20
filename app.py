@@ -3,10 +3,6 @@ import streamlit as st
 from twilio.rest import Client
 import os
 
-# Load environment variables (For local testing, use .env file)
-from dotenv import load_dotenv
-load_dotenv()
-
 
 # Access Twilio credentials from Streamlit secrets
 TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
