@@ -1,6 +1,12 @@
 import sqlite3
 import streamlit as st
 from twilio.rest import Client
+import os
+
+# Load environment variables (For local testing, use .env file)
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # Access Twilio credentials from Streamlit secrets
 TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
@@ -21,33 +27,34 @@ def init_db():
     conn.execute('''
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
+            name TEXT NOT NULL,
+            homepage_id INTEGER NOT NULL
         )
     ''')
     conn.commit()
     conn.close()
 
-def get_items():
+def get_items(homepage_id):
     conn = get_db_connection()
-    items = conn.execute('SELECT * FROM items').fetchall()
+    items = conn.execute('SELECT * FROM items WHERE homepage_id = ?', (homepage_id,)).fetchall()
     conn.close()
     return items
 
-def add_item(name):
+def add_item(name, homepage_id):
     conn = get_db_connection()
-    conn.execute('INSERT INTO items (name) VALUES (?)', (name,))
+    conn.execute('INSERT INTO items (name, homepage_id) VALUES (?, ?)', (name, homepage_id))
     conn.commit()
     conn.close()
 
-def update_item(item_id, name):
+def update_item(item_id, name, homepage_id):
     conn = get_db_connection()
-    conn.execute('UPDATE items SET name = ? WHERE id = ?', (name, item_id))
+    conn.execute('UPDATE items SET name = ? WHERE id = ? AND homepage_id = ?', (name, item_id, homepage_id))
     conn.commit()
     conn.close()
 
-def delete_item(item_id):
+def delete_item(item_id, homepage_id):
     conn = get_db_connection()
-    conn.execute('DELETE FROM items WHERE id = ?', (item_id,))
+    conn.execute('DELETE FROM items WHERE id = ? AND homepage_id = ?', (item_id, homepage_id))
     conn.commit()
     conn.close()
 
@@ -64,49 +71,64 @@ def send_sms(message):
     except Exception as e:
         st.error(f"Failed to send SMS: {e}")
 
-# Streamlit app layout
-st.title("CRUD App with Streamlit")
+# Function to handle homepage routing
+def homepage_route(homepage_id):
+    st.title(f"CRUD App for Homepage {homepage_id}")
 
-# Initialize the database
-init_db()
+    # Initialize the database
+    init_db()
 
-# Display items
-st.header("Items List")
-items = get_items()
+    # Display items for the current homepage
+    st.header(f"Items List for Homepage {homepage_id}")
+    items = get_items(homepage_id)
 
-for item in items:
-    col1, col2, col3 = st.columns([3, 1, 1])
+    for item in items:
+        col1, col2, col3 = st.columns([3, 1, 1])
+
+        with col1:
+            new_name = st.text_input(f"Update item #{item['id']}", item['name'], key=f"update_{item['id']}")
+
+        with col2:
+            if st.button("Update", key=f"update_btn_{item['id']}"):
+                if new_name.strip():
+                    update_item(item['id'], new_name, homepage_id)
+                    st.success(f"Updated item #{item['id']}")
+                else:
+                    st.error("Item name cannot be empty.")
+
+        with col3:
+            if st.button("Delete", key=f"delete_btn_{item['id']}"):
+                delete_item(item['id'], homepage_id)
+                st.success(f"Deleted item #{item['id']}")
+
+    # Add new item section
+    st.header("Add New Item")
+    new_item = st.text_input("Item Name", "")
+
+    if st.button("Add Item"):
+        if new_item.strip():
+            add_item(new_item, homepage_id)
+            st.success(f"Added item: {new_item}")
+
+            # Send SMS notification about the new item
+            message = f"New item added: {new_item}"
+            send_sms(message)
+        else:
+            st.error("Item name cannot be empty.")
+
+# Main page with options to select a homepage
+def main():
+    st.title("Select Homepage")
     
-    with col1:
-        new_name = st.text_input(f"Update item #{item['id']}", item['name'], key=f"update_{item['id']}")
+    homepage_options = ["Homepage 1", "Homepage 2", "Homepage 3", "Homepage 4", "Homepage 5", 
+                        "Homepage 6", "Homepage 7", "Homepage 8", "Homepage 9", "Homepage 10"]
     
-    with col2:
-        if st.button("Update", key=f"update_btn_{item['id']}"):
-            if new_name.strip():
-                update_item(item['id'], new_name)
-                st.success(f"Updated item #{item['id']}")
-            else:
-                st.error("Item name cannot be empty.")
-    
-    with col3:
-        if st.button("Delete", key=f"delete_btn_{item['id']}"):
-            delete_item(item['id'])
-            st.success(f"Deleted item #{item['id']}")
+    homepage = st.selectbox("Choose Homepage", homepage_options)
+    homepage_id = homepage_options.index(homepage) + 1
 
-# Add new item section
-st.header("Add New Item")
-new_item = st.text_input("Item Name", "")
+    # Display the selected homepage
+    homepage_route(homepage_id)
 
-if st.button("Add Item"):
-    if new_item.strip():
-        add_item(new_item)
-        st.success(f"Added item: {new_item}")
-        
-        # Send SMS notification about the new item
-        message = f"New item added: {new_item}"
-        send_sms(message)
-    else:
-        st.error("Item name cannot be empty.")
-
-# Footer
-st.text("CRUD operations with Streamlit and SQLite")
+# Run the app
+if __name__ == "__main__":
+    main()
