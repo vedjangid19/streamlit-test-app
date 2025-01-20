@@ -1,5 +1,12 @@
 import sqlite3
 import streamlit as st
+from twilio.rest import Client
+
+# Twilio configuration (use your Twilio account SID, Auth Token, and phone number)
+TWILIO_ACCOUNT_SID = 'your_account_sid'
+TWILIO_AUTH_TOKEN = 'your_auth_token'
+TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
+RECIPIENT_PHONE_NUMBER = 'recipient_phone_number'  # Replace with the number to receive SMS
 
 # Database setup
 DATABASE = 'items.db'
@@ -44,6 +51,15 @@ def delete_item(item_id):
     conn.commit()
     conn.close()
 
+# Send SMS with Twilio
+def send_sms(message):
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    client.messages.create(
+        body=message,
+        from_=TWILIO_PHONE_NUMBER,
+        to=RECIPIENT_PHONE_NUMBER
+    )
+
 # Streamlit app layout
 st.title("CRUD App with Streamlit")
 
@@ -81,6 +97,11 @@ if st.button("Add Item"):
     if new_item.strip():
         add_item(new_item)
         st.success(f"Added item: {new_item}")
+        
+        # Send SMS notification about the new item
+        message = f"New item added: {new_item}"
+        send_sms(message)
+        st.success(f"SMS sent to {RECIPIENT_PHONE_NUMBER}")
     else:
         st.error("Item name cannot be empty.")
 
