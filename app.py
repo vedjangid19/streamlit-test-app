@@ -115,7 +115,7 @@ def homepage_route(homepage_id):
 # Main function to simulate the URL routing
 def main():
     # Get query parameters from the URL
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
 
     # Check if we have a valid homepage parameter
     if 'homepage' in query_params:
