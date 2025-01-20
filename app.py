@@ -1,17 +1,12 @@
 import sqlite3
 import streamlit as st
 from twilio.rest import Client
-import os
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Twilio configuration from environment variables
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
-RECIPIENT_PHONE_NUMBER = os.getenv('RECIPIENT_PHONE_NUMBER')
+# Access Twilio credentials from Streamlit secrets
+TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
+TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
+TWILIO_PHONE_NUMBER = st.secrets["TWILIO_PHONE_NUMBER"]
+RECIPIENT_PHONE_NUMBER = st.secrets["RECIPIENT_PHONE_NUMBER"]
 
 # Database setup
 DATABASE = 'items.db'
