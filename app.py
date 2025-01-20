@@ -67,7 +67,7 @@ def send_sms(message):
     except Exception as e:
         st.error(f"Failed to send SMS: {e}")
 
-# Function to handle homepage routing
+# Function to handle homepage routing based on query parameters
 def homepage_route(homepage_id):
     st.title(f"CRUD App for Homepage {homepage_id}")
 
@@ -112,18 +112,20 @@ def homepage_route(homepage_id):
         else:
             st.error("Item name cannot be empty.")
 
-# Main page with options to select a homepage
+# Main function to simulate the URL routing
 def main():
-    st.title("Select Homepage")
-    
-    homepage_options = ["Homepage 1", "Homepage 2", "Homepage 3", "Homepage 4", "Homepage 5", 
-                        "Homepage 6", "Homepage 7", "Homepage 8", "Homepage 9", "Homepage 10"]
-    
-    homepage = st.selectbox("Choose Homepage", homepage_options)
-    homepage_id = homepage_options.index(homepage) + 1
+    # Get query parameters from the URL
+    query_params = st.experimental_get_query_params()
 
-    # Display the selected homepage
-    homepage_route(homepage_id)
+    # Check if we have a valid homepage parameter
+    if 'homepage' in query_params:
+        try:
+            homepage_id = int(query_params['homepage'][0])  # Get homepage ID from URL query parameter
+            homepage_route(homepage_id)  # Show content based on homepage_id
+        except ValueError:
+            st.error("Invalid homepage number.")
+    else:
+        st.warning("Please select a homepage by adding ?homepage=<number> to the URL.")
 
 # Run the app
 if __name__ == "__main__":
