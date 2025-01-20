@@ -2,7 +2,7 @@ import sqlite3
 import streamlit as st
 
 # Database setup
-DATABASE = 'items1.db'
+DATABASE = 'items.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -55,15 +55,20 @@ st.header("Items List")
 items = get_items()
 
 for item in items:
-    st.text_input(f"Update item #{item['id']}", item['name'], key=f"update_{item['id']}")
-    if st.button("Update", key=f"update_btn_{item['id']}"):
-        new_name = st.session_state[f"update_{item['id']}"]
-        update_item(item['id'], new_name)
-        st.experimental_rerun()
-
-    if st.button("Delete", key=f"delete_btn_{item['id']}"):
-        delete_item(item['id'])
-        st.experimental_rerun()
+    col1, col2, col3 = st.columns([3, 1, 1])
+    with col1:
+        new_name = st.text_input(f"Update item #{item['id']}", item['name'], key=f"update_{item['id']}")
+    with col2:
+        if st.button("Update", key=f"update_btn_{item['id']}"):
+            if new_name.strip():
+                update_item(item['id'], new_name)
+                st.experimental_rerun()
+            else:
+                st.error("Item name cannot be empty.")
+    with col3:
+        if st.button("Delete", key=f"delete_btn_{item['id']}"):
+            delete_item(item['id'])
+            st.experimental_rerun()
 
 st.header("Add New Item")
 new_item = st.text_input("Item Name", "")
