@@ -1,12 +1,17 @@
 import sqlite3
 import streamlit as st
 from twilio.rest import Client
+import os
+from dotenv import load_dotenv
 
-# Twilio configuration (use your Twilio account SID, Auth Token, and phone number)
-TWILIO_ACCOUNT_SID = 'your_account_sid'
-TWILIO_AUTH_TOKEN = 'your_auth_token'
-TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
-RECIPIENT_PHONE_NUMBER = 'recipient_phone_number'  # Replace with the number to receive SMS
+# Load environment variables from .env file
+load_dotenv()
+
+# Twilio configuration from environment variables
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
+RECIPIENT_PHONE_NUMBER = os.getenv('RECIPIENT_PHONE_NUMBER')
 
 # Database setup
 DATABASE = 'items.db'
@@ -53,12 +58,16 @@ def delete_item(item_id):
 
 # Send SMS with Twilio
 def send_sms(message):
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    client.messages.create(
-        body=message,
-        from_=TWILIO_PHONE_NUMBER,
-        to=RECIPIENT_PHONE_NUMBER
-    )
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        client.messages.create(
+            body=message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=RECIPIENT_PHONE_NUMBER
+        )
+        st.success("SMS sent successfully!")
+    except Exception as e:
+        st.error(f"Failed to send SMS: {e}")
 
 # Streamlit app layout
 st.title("CRUD App with Streamlit")
@@ -101,7 +110,6 @@ if st.button("Add Item"):
         # Send SMS notification about the new item
         message = f"New item added: {new_item}"
         send_sms(message)
-        st.success(f"SMS sent to {RECIPIENT_PHONE_NUMBER}")
     else:
         st.error("Item name cannot be empty.")
 
