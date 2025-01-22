@@ -19,71 +19,76 @@ def vending_form():
     pin_code = st.text_input("PIN Code", "")
 
     if st.button("Submit"):
-        if name and mobile and city and area and pin_code and machine_id:
-            # Generate OTP and send SMS
-            otp = generate_otp()
-            msg_body = f"Your verification OTP for vending machine [ {machine_id} ]: {otp}"
-            send_otp_sms(mobile, msg_body)
-
-            # Insert user details into the database
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            date = datetime.now().strftime("%Y-%m-%d")
-
-            insert_user(
-                name=name,
-                mobile=mobile,
-                city=city,
-                area=area,
-                pin_code=pin_code,
-                machine_id=machine_id,
-                timestamp=timestamp,
-                date=date,
-                otp=otp
-            )
-
-            # Store mobile and machine_id in session state
-            st.session_state.mobile = mobile
-            st.session_state.machine_id = machine_id
-
-            st.success("OTP has been sent to your mobile. Please enter it below.")
-
-            # OTP input field
-            otp_input = st.text_input("Enter OTP", "", type="password")
-
-            if otp_input:
-                # Fetch the user record from the database by mobile number
-                user_record = get_user_by_mobile(mobile)
-                if user_record:
-                    generated_otp = user_record['otp']
-
-                    # Check if the entered OTP matches the generated OTP
-                    if int(generated_otp) == int(otp_input):
-                        # OTP verified successfully, generate unique code
-                        unique_code = generate_unique_code()
-
-                        # Update the database with the unique code
-                        conn = get_db_connection()
-                        cursor = conn.cursor()
-                        cursor.execute('''
-                            UPDATE users
-                            SET unique_code = ?, collected = ?, is_verify = ?
-                            WHERE mobile = ? AND machine_id = ?;
-                        ''', (unique_code, 0, 1, mobile, machine_id))
-                        conn.commit()
-                        conn.close()
-
-                        machine_number = '+919769496162'
-                        # Send the unique code via SMS
-                        msg_body = f"OTP Verified. Here is your unique code for collection from machine {machine_id}: {unique_code}"
-                        send_otp_sms(machine_number, msg_body)
-
-                        st.success(f"OTP Verified! Your unique code for collection: {unique_code}")
+        if not get_user_by_mobile(mobile):
+        
+            if name and mobile and city and area and pin_code and machine_id:
+                # Generate OTP and send SMS
+                otp = generate_otp()
+                msg_body = f"Your verification OTP for vending machine [ {machine_id} ]: {otp}"
+                send_otp_sms(mobile, msg_body)
+    
+                # Insert user details into the database
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.now().strftime("%Y-%m-%d")
+    
+                insert_user(
+                    name=name,
+                    mobile=mobile,
+                    city=city,
+                    area=area,
+                    pin_code=pin_code,
+                    machine_id=machine_id,
+                    timestamp=timestamp,
+                    date=date,
+                    otp=otp
+                )
+    
+                # Store mobile and machine_id in session state
+                st.session_state.mobile = mobile
+                st.session_state.machine_id = machine_id
+    
+                st.success("OTP has been sent to your mobile. Please enter it below.")
+    
+                # OTP input field
+                otp_input = st.text_input("Enter OTP", "", type="password")
+    
+                if otp_input:
+                    # Fetch the user record from the database by mobile number
+                    user_record = get_user_by_mobile(mobile)
+                    if user_record:
+                        generated_otp = user_record['otp']
+    
+                        # Check if the entered OTP matches the generated OTP
+                        if int(generated_otp) == int(otp_input):
+                            # OTP verified successfully, generate unique code
+                            unique_code = generate_unique_code()
+    
+                            # Update the database with the unique code
+                            conn = get_db_connection()
+                            cursor = conn.cursor()
+                            cursor.execute('''
+                                UPDATE users
+                                SET unique_code = ?, collected = ?, is_verify = ?
+                                WHERE mobile = ? AND machine_id = ?;
+                            ''', (unique_code, 0, 1, mobile, machine_id))
+                            conn.commit()
+                            conn.close()
+    
+                            machine_number = '+919769496162'
+                            # Send the unique code via SMS
+                            msg_body = f"OTP Verified. Here is your unique code for collection from machine {machine_id}: {unique_code}"
+                            send_otp_sms(machine_number, msg_body)
+    
+                            st.success(f"OTP Verified! Your unique code for collection: {unique_code}")
+                        else:
+                            st.error("Invalid OTP. Please try again.")
                     else:
-                        st.error("Invalid OTP. Please try again.")
-                else:
-                    st.error("User not found.")
+                        st.error("User not found.")
+            else:
+                st.error("Please fill in all the fields.")
+            
         else:
-            st.error("Please fill in all the fields.")
+            st.warning("User Already registed with this number.")
 
 # Main function to run the Streamlit app
 def main():
