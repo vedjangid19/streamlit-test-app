@@ -19,6 +19,7 @@ def vending_form():
     pin_code = st.text_input("PIN Code", "")
 
     if st.button("Submit"):
+        init_db()
         if not get_user_by_mobile(mobile):
         
             if name and mobile and city and area and pin_code and machine_id:
