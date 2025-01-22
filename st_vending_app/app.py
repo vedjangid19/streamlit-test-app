@@ -1,5 +1,5 @@
 import streamlit as st
-from db import get_db_connection, insert_user, get_user_by_mobile
+from db import get_db_connection, insert_user, get_user_by_mobile, init_db
 from otp_service import generate_otp, send_otp_sms
 from unique_code_generator import generate_unique_code
 from datetime import datetime
